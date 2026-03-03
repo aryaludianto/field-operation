@@ -77,9 +77,9 @@ Schema tables:
 
 ## Frontend status
 
-`apps/web` is a Vite + React + Tailwind shell with Mapbox GL wired up. Upcoming tasks:
-- Connect Apollo Client to API once schema lands.
-- Implement mission list + filters + detail drawers.
+`apps/web` now ships with a Vite + React + Tailwind shell, Mapbox mission map component, and a tiny internal UI kit (buttons, badges, stat cards, sidebar layout). Upcoming tasks:
+- Wire Apollo Client to the API once CRUD resolvers land.
+- Implement real mission list + filters + detail drawers.
 - Build report composer + offline queue.
 
 ## Tooling

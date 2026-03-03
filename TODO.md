@@ -19,7 +19,7 @@
 - [ ] Optional: push Slack/webhook notification stub.
 
 ## 3. Frontend (React + Mapbox)
-- [ ] Create Vite React app with Tailwind + component library.
+- [x] Create Vite React app with Tailwind + component library.
 - [ ] Build mission map view (clustered markers, filter pill bar, detail drawer).
 - [ ] Implement report composer (rich text + photo uploads + offline queue with localStorage).
 - [ ] Add dashboard page with metrics (cards + charts via Tremor/Recharts).
