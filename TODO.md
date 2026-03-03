@@ -1,14 +1,14 @@
 # EcoFieldOps TODO
 
 ## 0. Repo scaffolding
-- [ ] Initialize git repo + license + editorconfig.
-- [ ] Set up Turbo/Nx (or pnpm workspaces) for frontend/backend/worker packages.
-- [ ] Configure shared tsconfig + lint/prettier rules.
+- [x] Initialize git repo + license + editorconfig.
+- [x] Set up Turbo/Nx (or pnpm workspaces) for frontend/backend/worker packages.
+- [x] Configure shared tsconfig + lint/prettier rules.
 
 ## 1. Backend (GraphQL API)
-- [ ] Create `apps/api` with Apollo Server, TypeGraphQL, and Drizzle ORM.
-- [ ] Define PostgreSQL schema (missions, mission_logs, field_reports, assets, users, organizations).
-- [ ] Seed script with mock missions + report entries (SQL + JSON).
+- [x] Create `apps/api` with Apollo Server, TypeGraphQL, and Drizzle ORM.
+- [x] Define PostgreSQL schema (missions, mission_logs, field_reports, assets, users, organizations).
+- [x] Seed script with mock missions + report entries (SQL + JSON).
 - [x] Implement resolvers for missions list + mission detail queries.
 - [ ] Implement report CRUD mutations.
 - [ ] Add file upload mutation (sign S3 URL via LocalStack).
@@ -26,11 +26,11 @@
 - [ ] Auth skeleton (Supabase/Clerk) with role-based gating.
 
 ## 4. Dev tooling
-- [ ] Docker Compose for Postgres + Redis + LocalStack.
-- [ ] Task scripts (e.g., `pnpm dev`, `pnpm lint`, `pnpm test`).
+- [x] Docker Compose for Postgres + Redis + LocalStack.
+- [x] Task scripts (e.g., `pnpm dev`, `pnpm lint`, `pnpm test`).
 - [ ] GitHub Actions workflow (lint/test on PRs).
 
 ## 5. Docs/demo assets
-- [ ] Update README with setup instructions + screenshots/GIFs once UI exists.
+- [x] Update README with setup instructions + screenshots/GIFs once UI exists.
 - [ ] Create sample data JSON + scripts under `/scripts/seeds`.
 - [ ] Record short Loom/GIF of mission map + AI summary pipeline.
