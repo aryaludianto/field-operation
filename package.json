@@ -1,0 +1,29 @@
+{
+  "name": "ecofieldops",
+  "version": "1.0.0",
+  "description": "Modern geospatial operations platform inspired by my work at Gaia Ecologie. EcoFieldOps combines a React + Mapbox GL front end with a GraphQL API powered by Node.js, Apollo Server, PostgreSQL (Drizzle ORM), and OpenAI-backed summarization jobs. The goal is to show how I build data-heavy field dashboards that map missions, collect reports, and ship AI-assisted insights.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "seed": "tsx scripts/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "prettier": "^3.8.1",
+    "tsx": "^4.21.0",
+    "turbo": "^2.8.12"
+  },
+  "packageManager": "npm@11.9.0"
+}
