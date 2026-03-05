@@ -11,3 +11,7 @@ coverage
 .cache
 .vscode
 .idea
+
+.turbo
+apps/*/.turbo
+packages/*/.turbo
