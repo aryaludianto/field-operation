@@ -1,11 +1,12 @@
 import { Arg, Field, FieldResolver, Float, GraphQLISODateTime, ID, InputType, ObjectType, Query, Resolver, Root, registerEnumType } from 'type-graphql';
 import { SQL, and, desc, eq, ilike, or } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
-import { db } from '../db/client';
-import { fieldReports, missions } from '../db/schema';
+import { db } from '../db/client.js';
+import { fieldReports, missions } from '../db/schema.js';
+import { FieldReport } from './report.types.js';
+import { mapReportRow } from './report.mapper.js';
 
 type MissionRow = InferSelectModel<typeof missions>;
-type ReportRow = InferSelectModel<typeof fieldReports>;
 
 enum MissionStatus {
   PLANNED = 'PLANNED',
@@ -16,59 +17,6 @@ enum MissionStatus {
 registerEnumType(MissionStatus, {
   name: 'MissionStatus',
 });
-
-enum ReportSeverity {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-}
-
-registerEnumType(ReportSeverity, {
-  name: 'ReportSeverity',
-});
-
-enum UserRole {
-  ADMIN = 'ADMIN',
-  COORDINATOR = 'COORDINATOR',
-  FIELD_CREW = 'FIELD_CREW',
-}
-
-registerEnumType(UserRole, {
-  name: 'UserRole',
-});
-
-@ObjectType()
-class FieldReport {
-  @Field(() => ID)
-  id!: string;
-
-  @Field(() => ID)
-  missionId!: string;
-
-  @Field(() => String, { nullable: true })
-  authorId?: string | null;
-
-  @Field(() => String)
-  authorName!: string;
-
-  @Field(() => UserRole)
-  authorRole!: UserRole;
-
-  @Field({ nullable: true })
-  summary?: string | null;
-
-  @Field()
-  details!: string;
-
-  @Field(() => ReportSeverity)
-  severity!: ReportSeverity;
-
-  @Field(() => GraphQLISODateTime)
-  submittedAt!: Date;
-
-  @Field({ nullable: true })
-  status?: string | null;
-}
 
 @ObjectType()
 class Mission {
@@ -117,10 +65,10 @@ class MissionFilterInput {
   @Field(() => MissionStatus, { nullable: true })
   status?: MissionStatus;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   region?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   search?: string;
 }
 
@@ -153,12 +101,14 @@ export class MissionResolver {
   }
 
   @FieldResolver(() => [FieldReport])
-  async reports(@Root() mission: MissionRow): Promise<ReportRow[]> {
-    return db
+  async reports(@Root() mission: MissionRow): Promise<FieldReport[]> {
+    const rows = await db
       .select()
       .from(fieldReports)
       .where(eq(fieldReports.missionId, mission.id))
       .orderBy(desc(fieldReports.submittedAt));
+
+    return rows.map(mapReportRow);
   }
 
   private buildWhere(filter?: MissionFilterInput): SQL | undefined {
