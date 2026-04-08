@@ -21,7 +21,7 @@
 ## 3. Frontend (React + Mapbox)
 - [x] Create Vite React app with Tailwind + component library.
 - [x] Build mission map view (clustered markers, filter pill bar, detail drawer).
-- [ ] Implement report composer (rich text + photo uploads + offline queue with localStorage).
+- [x] Implement report composer (rich text + photo uploads + offline queue with localStorage).
 - [ ] Add dashboard page with metrics (cards + charts via Tremor/Recharts).
 - [ ] Auth skeleton (Supabase/Clerk) with role-based gating.
 

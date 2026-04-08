@@ -1,6 +1,17 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-leaf-50: #f2fbf4;
+  --color-leaf-100: #daf5df;
+  --color-leaf-200: #adebc0;
+  --color-leaf-300: #70d88f;
+  --color-leaf-400: #37bd60;
+  --color-leaf-500: #1fa449;
+  --color-leaf-600: #15863a;
+  --color-leaf-700: #136a31;
+  --color-leaf-800: #11552b;
+  --color-leaf-900: #0f4625;
+}
 
 :root {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

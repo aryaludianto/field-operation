@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Sidebar } from './components/layout/sidebar';
 import { MissionMap } from './components/map/mission-map';
 import { StatCard } from './components/ui/stat-card';

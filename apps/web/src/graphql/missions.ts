@@ -1,5 +1,45 @@
 import { gql } from '@apollo/client';
 
+export const CREATE_REPORT_MUTATION = gql`
+  mutation CreateFieldReport($input: CreateReportInput!) {
+    createFieldReport(input: $input) {
+      id
+      missionId
+      authorName
+      authorRole
+      summary
+      details
+      severity
+      submittedAt
+      status
+    }
+  }
+`;
+
+export type CreateReportInput = {
+  missionId: string;
+  authorName: string;
+  summary?: string;
+  details: string;
+  severity?: 'LOW' | 'MEDIUM' | 'HIGH';
+};
+
+export type CreatedReport = {
+  id: string;
+  missionId: string;
+  authorName: string;
+  authorRole: string;
+  summary?: string | null;
+  details: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  submittedAt: string;
+  status?: string | null;
+};
+
+export type CreateReportResult = {
+  createFieldReport: CreatedReport;
+};
+
 export const MISSIONS_QUERY = gql`
   query Missions($filter: MissionFilterInput) {
     missions(filter: $filter) {

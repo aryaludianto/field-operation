@@ -1,30 +1,36 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import clsx from 'classnames';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Card } from '../ui/card';
-import type { Mission } from '../../graphql/missions';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMutation } from "@apollo/client/react";
+import clsx from "classnames";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Card } from "../ui/card";
+import type { Mission } from "../../graphql/missions";
+import {
+  CREATE_REPORT_MUTATION,
+  type CreateReportInput,
+  type CreateReportResult,
+} from "../../graphql/missions";
 
-const DRAFT_STORAGE_KEY = 'ecofieldops.reportDrafts.v1';
+const DRAFT_STORAGE_KEY = "ecofieldops.reportDrafts.v1";
 
 const severityOptions = [
   {
-    value: 'LOW',
-    label: 'Low',
-    helper: 'Routine observation',
-    tone: 'border-green-200 bg-green-50 text-green-800',
+    value: "LOW",
+    label: "Low",
+    helper: "Routine observation",
+    tone: "border-green-200 bg-green-50 text-green-800",
   },
   {
-    value: 'MEDIUM',
-    label: 'Medium',
-    helper: 'Requires follow-up',
-    tone: 'border-amber-200 bg-amber-50 text-amber-900',
+    value: "MEDIUM",
+    label: "Medium",
+    helper: "Requires follow-up",
+    tone: "border-amber-200 bg-amber-50 text-amber-900",
   },
   {
-    value: 'HIGH',
-    label: 'High',
-    helper: 'Immediate action',
-    tone: 'border-rose-200 bg-rose-50 text-rose-900',
+    value: "HIGH",
+    label: "High",
+    helper: "Immediate action",
+    tone: "border-rose-200 bg-rose-50 text-rose-900",
   },
 ] as const;
 
@@ -40,32 +46,53 @@ type ReportDraft = {
   id: string;
   missionId: string | null;
   missionName: string;
+  authorName: string;
   title: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  severity: "LOW" | "MEDIUM" | "HIGH";
   bodyHtml: string;
   attachments: { name: string; size: number; type: string }[];
   createdAt: string;
 };
 
+type FeedbackKind = "success" | "error" | "info";
+
+type Feedback = {
+  message: string;
+  kind: FeedbackKind;
+};
+
 export function ReportComposer({ missions }: { missions: Mission[] }) {
-  const [missionId, setMissionId] = useState<string>('');
-  const [title, setTitle] = useState('');
-  const [severity, setSeverity] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('LOW');
-  const [bodyHtml, setBodyHtml] = useState('');
+  const [missionId, setMissionId] = useState<string>("");
+  const [authorName, setAuthorName] = useState("");
+  const [title, setTitle] = useState("");
+  const [severity, setSeverity] = useState<"LOW" | "MEDIUM" | "HIGH">("LOW");
+  const [bodyHtml, setBodyHtml] = useState("");
   const [attachments, setAttachments] = useState<AttachmentPreview[]>([]);
   const [drafts, setDrafts] = useState<ReportDraft[]>([]);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [submittingDraftId, setSubmittingDraftId] = useState<string | null>(
+    null,
+  );
   const [isOnline, setIsOnline] = useState(
-    typeof navigator !== 'undefined' ? navigator.onLine : true,
+    typeof navigator !== "undefined" ? navigator.onLine : true,
   );
 
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [createReport, { loading: submitting }] = useMutation<
+    CreateReportResult,
+    { input: CreateReportInput }
+  >(CREATE_REPORT_MUTATION);
+
   const missionOptions = useMemo(
     () =>
       missions
-        .map((mission) => ({ value: mission.id, label: mission.name, region: mission.region }))
+        .map((mission) => ({
+          value: mission.id,
+          label: mission.name,
+          region: mission.region,
+        }))
         .sort((a, b) => a.label.localeCompare(b.label)),
     [missions],
   );
@@ -73,8 +100,8 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
   const persistDrafts = useCallback(
     (updater: ReportDraft[] | ((prev: ReportDraft[]) => ReportDraft[])) => {
       setDrafts((prev) => {
-        const next = typeof updater === 'function' ? updater(prev) : updater;
-        if (typeof window !== 'undefined') {
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        if (typeof window !== "undefined") {
           localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(next));
         }
         return next;
@@ -84,30 +111,30 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
   );
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     try {
       const stored = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (stored) {
         setDrafts(JSON.parse(stored));
       }
     } catch (error) {
-      console.warn('Failed to parse stored drafts', error);
+      console.warn("Failed to parse stored drafts", error);
     }
   }, []);
 
   useEffect(() => {
     const handleStatus = () => setIsOnline(navigator.onLine);
-    window.addEventListener('online', handleStatus);
-    window.addEventListener('offline', handleStatus);
+    window.addEventListener("online", handleStatus);
+    window.addEventListener("offline", handleStatus);
     return () => {
-      window.removeEventListener('online', handleStatus);
-      window.removeEventListener('offline', handleStatus);
+      window.removeEventListener("online", handleStatus);
+      window.removeEventListener("offline", handleStatus);
     };
   }, []);
 
   useEffect(() => {
     if (!feedback) return;
-    const timeout = setTimeout(() => setFeedback(null), 3500);
+    const timeout = setTimeout(() => setFeedback(null), 4000);
     return () => clearTimeout(timeout);
   }, [feedback]);
 
@@ -127,7 +154,7 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
     }));
     setAttachments((prev) => [...prev, ...next]);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -146,40 +173,146 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const applyFormatting = (command: 'bold' | 'italic' | 'insertUnorderedList') => {
+  const applyFormatting = (
+    command: "bold" | "italic" | "insertUnorderedList",
+  ) => {
     document.execCommand(command, false);
     editorRef.current?.focus();
     handleBodyInput();
   };
 
+  const resetForm = () => {
+    setMissionId("");
+    setAuthorName("");
+    setTitle("");
+    setBodyHtml("");
+    setSeverity("LOW");
+    if (editorRef.current) editorRef.current.innerHTML = "";
+    attachments.forEach((attachment) => URL.revokeObjectURL(attachment.url));
+    setAttachments([]);
+  };
+
   const handleQueueDraft = () => {
     if (!title.trim() && !bodyHtml.trim() && attachments.length === 0) {
-      setFeedback('Add notes or media before queuing a draft.');
+      setFeedback({
+        message: "Add notes or media before queuing a draft.",
+        kind: "info",
+      });
       return;
     }
 
     const missionName = missionId
-      ? missionOptions.find((option) => option.value === missionId)?.label ?? 'Unknown mission'
-      : 'Unassigned mission';
+      ? (missionOptions.find((option) => option.value === missionId)?.label ??
+        "Unknown mission")
+      : "Unassigned mission";
 
     const draft: ReportDraft = {
       id: crypto.randomUUID?.() ?? `${Date.now()}`,
       missionId: missionId || null,
       missionName,
-      title: title.trim() || 'Untitled report',
+      authorName: authorName.trim() || "Field crew",
+      title: title.trim() || "Untitled report",
       severity,
       bodyHtml,
-      attachments: attachments.map(({ name, size, type }) => ({ name, size, type })),
+      attachments: attachments.map(({ name, size, type }) => ({
+        name,
+        size,
+        type,
+      })),
       createdAt: new Date().toISOString(),
     };
 
     persistDrafts((prev) => [draft, ...prev]);
-    setTitle('');
-    setBodyHtml('');
-    editorRef.current && (editorRef.current.innerHTML = '');
-    attachments.forEach((attachment) => URL.revokeObjectURL(attachment.url));
-    setAttachments([]);
-    setFeedback('Report saved to offline queue. Ready when connectivity returns.');
+    resetForm();
+    setFeedback({
+      message:
+        "Report saved to offline queue. Will sync when connectivity returns.",
+      kind: "info",
+    });
+  };
+
+  const handleSubmitToApi = async () => {
+    if (!missionId) {
+      setFeedback({
+        message: "Please select a mission before submitting.",
+        kind: "error",
+      });
+      return;
+    }
+    if (!authorName.trim()) {
+      setFeedback({
+        message: "Please enter your name before submitting.",
+        kind: "error",
+      });
+      return;
+    }
+    if (!bodyHtml.trim() && !title.trim()) {
+      setFeedback({
+        message: "Add a title or field notes before submitting.",
+        kind: "error",
+      });
+      return;
+    }
+
+    try {
+      await createReport({
+        variables: {
+          input: {
+            missionId,
+            authorName: authorName.trim(),
+            summary: title.trim() || undefined,
+            details: bodyHtml || title.trim(),
+            severity,
+          },
+        },
+      });
+      resetForm();
+      setFeedback({
+        message: "Report submitted successfully!",
+        kind: "success",
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setFeedback({ message: `Submission failed: ${message}`, kind: "error" });
+    }
+  };
+
+  const handleSubmitDraft = async (draft: ReportDraft) => {
+    if (!draft.missionId) {
+      setFeedback({
+        message: `Draft "${draft.title}" has no mission assigned — edit it first.`,
+        kind: "error",
+      });
+      return;
+    }
+
+    setSubmittingDraftId(draft.id);
+    try {
+      await createReport({
+        variables: {
+          input: {
+            missionId: draft.missionId,
+            authorName: draft.authorName || "Field crew",
+            summary: draft.title,
+            details: draft.bodyHtml || draft.title,
+            severity: draft.severity,
+          },
+        },
+      });
+      persistDrafts((prev) => prev.filter((d) => d.id !== draft.id));
+      setFeedback({
+        message: `"${draft.title}" submitted successfully!`,
+        kind: "success",
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setFeedback({
+        message: `Failed to submit "${draft.title}": ${message}`,
+        kind: "error",
+      });
+    } finally {
+      setSubmittingDraftId(null);
+    }
   };
 
   const deleteDraft = (id: string) => {
@@ -195,22 +328,39 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
     handleFiles(event.dataTransfer.files);
   };
 
+  const canSubmit =
+    isOnline &&
+    !!missionId &&
+    !!authorName.trim() &&
+    (!!title.trim() || !!bodyHtml.trim());
+
+  const feedbackColors: Record<FeedbackKind, string> = {
+    success: "text-leaf-600",
+    error: "text-rose-600",
+    info: "text-slate-600",
+  };
+
   return (
     <Card className="space-y-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">Report composer</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            Report composer
+          </p>
           <p className="text-sm text-slate-600">
             Capture field intel, attach media, and queue drafts while offline.
           </p>
         </div>
-        <Badge variant={isOnline ? 'green' : 'amber'}>
-          {isOnline ? 'Online' : 'Offline mode'}
+        <Badge variant={isOnline ? "green" : "amber"}>
+          {isOnline ? "Online" : "Offline mode"}
         </Badge>
       </div>
 
       <div className="space-y-3">
-        <label className="text-xs font-medium text-slate-500" htmlFor="mission-select">
+        <label
+          className="text-xs font-medium text-slate-500"
+          htmlFor="mission-select"
+        >
           Mission
         </label>
         <select
@@ -229,7 +379,26 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
       </div>
 
       <div className="space-y-3">
-        <label className="text-xs font-medium text-slate-500" htmlFor="report-title">
+        <label
+          className="text-xs font-medium text-slate-500"
+          htmlFor="author-name"
+        >
+          Your name
+        </label>
+        <input
+          id="author-name"
+          value={authorName}
+          onChange={(event) => setAuthorName(event.target.value)}
+          placeholder="eg. Jane Smith"
+          className="w-full rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-sm text-slate-800 shadow-inner focus:border-leaf-500 focus:outline-none"
+        />
+      </div>
+
+      <div className="space-y-3">
+        <label
+          className="text-xs font-medium text-slate-500"
+          htmlFor="report-title"
+        >
           Title
         </label>
         <input
@@ -242,7 +411,9 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
       </div>
 
       <div className="space-y-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Severity</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          Severity
+        </p>
         <div className="grid gap-2 sm:grid-cols-3">
           {severityOptions.map((option) => (
             <button
@@ -250,9 +421,11 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
               key={option.value}
               onClick={() => setSeverity(option.value)}
               className={clsx(
-                'rounded-2xl border px-3 py-2 text-left text-sm shadow-sm transition hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-leaf-400',
+                "rounded-2xl border px-3 py-2 text-left text-sm shadow-sm transition hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-leaf-400",
                 option.tone,
-                severity === option.value ? 'ring-2 ring-offset-2 ring-offset-white' : 'opacity-80',
+                severity === option.value
+                  ? "ring-2 ring-offset-2 ring-offset-white"
+                  : "opacity-80",
               )}
             >
               <p className="font-semibold">{option.label}</p>
@@ -266,14 +439,19 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
         <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-slate-500">
           <span>Field notes</span>
           <div className="flex gap-1">
-            <Button variant="outline" size="sm" className="h-8" onClick={() => applyFormatting('bold')}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => applyFormatting("bold")}
+            >
               Bold
             </Button>
             <Button
               variant="outline"
               size="sm"
               className="h-8"
-              onClick={() => applyFormatting('italic')}
+              onClick={() => applyFormatting("italic")}
             >
               Italic
             </Button>
@@ -281,7 +459,7 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
               variant="outline"
               size="sm"
               className="h-8"
-              onClick={() => applyFormatting('insertUnorderedList')}
+              onClick={() => applyFormatting("insertUnorderedList")}
             >
               Bullets
             </Button>
@@ -300,7 +478,9 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
       <div className="space-y-3">
         <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-slate-500">
           <span>Photos & media</span>
-          <span className="text-[10px] text-slate-400">Drop files or use the uploader</span>
+          <span className="text-[10px] text-slate-400">
+            Drop files or use the uploader
+          </span>
         </div>
         <div
           className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-4 text-center text-sm text-slate-500"
@@ -333,8 +513,12 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
                 key={attachment.id}
                 className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white/70"
               >
-                {attachment.type.startsWith('image/') ? (
-                  <img src={attachment.url} alt={attachment.name} className="h-32 w-full object-cover" />
+                {attachment.type.startsWith("image/") ? (
+                  <img
+                    src={attachment.url}
+                    alt={attachment.name}
+                    className="h-32 w-full object-cover"
+                  />
                 ) : (
                   <div className="flex h-32 w-full items-center justify-center text-xs text-slate-500">
                     {attachment.name}
@@ -357,14 +541,40 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Button type="button" size="lg" className="flex-1" onClick={handleQueueDraft}>
+        <Button
+          type="button"
+          size="lg"
+          variant="outline"
+          className="flex-1"
+          onClick={handleQueueDraft}
+        >
           Save to offline queue
         </Button>
-        <Button type="button" size="lg" variant="subtle" className="flex-1" disabled>
-          Submit to API (coming soon)
+        <Button
+          type="button"
+          size="lg"
+          className="flex-1"
+          disabled={!canSubmit || submitting}
+          onClick={handleSubmitToApi}
+        >
+          {submitting ? "Submitting…" : "Submit report"}
         </Button>
       </div>
-      {feedback ? <p className="text-sm text-leaf-600">{feedback}</p> : null}
+
+      {!isOnline && (
+        <p className="text-xs text-amber-600">
+          You're offline — reports will be queued and can be submitted once
+          reconnected.
+        </p>
+      )}
+
+      {feedback ? (
+        <p
+          className={clsx("text-sm font-medium", feedbackColors[feedback.kind])}
+        >
+          {feedback.message}
+        </p>
+      ) : null}
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -378,25 +588,54 @@ export function ReportComposer({ missions }: { missions: Mission[] }) {
           ) : null}
         </div>
         {drafts.length === 0 ? (
-          <p className="text-sm text-slate-500">No drafts yet. Anything you queue appears here.</p>
+          <p className="text-sm text-slate-500">
+            No drafts yet. Anything you queue appears here.
+          </p>
         ) : (
           <ol className="space-y-3">
             {drafts.map((draft) => (
-              <li key={draft.id} className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+              <li
+                key={draft.id}
+                className="rounded-2xl border border-slate-200 bg-white/80 p-4"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{draft.title}</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {draft.title}
+                    </p>
                     <p className="text-xs text-slate-500">
-                      {draft.missionName} · {new Date(draft.createdAt).toLocaleString()}
+                      {draft.missionName} · {draft.authorName} ·{" "}
+                      {new Date(draft.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => deleteDraft(draft.id)}>
-                    Remove
-                  </Button>
+                  <div className="flex shrink-0 gap-2">
+                    {isOnline && draft.missionId ? (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        disabled={submittingDraftId === draft.id}
+                        onClick={() => handleSubmitDraft(draft)}
+                      >
+                        {submittingDraftId === draft.id ? "Sending…" : "Submit"}
+                      </Button>
+                    ) : null}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => deleteDraft(draft.id)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
                   <span>Severity: {draft.severity}</span>
                   <span>Attachments: {draft.attachments.length}</span>
+                  {!draft.missionId && (
+                    <span className="text-amber-600">
+                      No mission — assign one to enable submit
+                    </span>
+                  )}
                 </div>
                 {draft.bodyHtml ? (
                   <div

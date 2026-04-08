@@ -51,6 +51,7 @@ export function MissionMap({ missions, onSelectMission, isLoading }: MissionMapP
       style: 'mapbox://styles/mapbox/outdoors-v12',
       center: [4.895168, 52.370216],
       zoom: 5,
+      preserveDrawingBuffer: true,
     });
 
     map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }));
