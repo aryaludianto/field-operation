@@ -4,6 +4,7 @@ import clsx from 'classnames';
 const variants = {
   green: 'bg-leaf-100 text-leaf-700 ring-1 ring-inset ring-leaf-200',
   slate: 'bg-slate-100 text-slate-700 ring-1 ring-slate-200',
+  amber: 'bg-amber-100 text-amber-900 ring-1 ring-amber-200',
 } as const;
 
 export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {

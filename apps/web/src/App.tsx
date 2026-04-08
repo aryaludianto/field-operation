@@ -5,6 +5,7 @@ import { MissionMap } from './components/map/mission-map';
 import { StatCard } from './components/ui/stat-card';
 import { Button } from './components/ui/button';
 import { Badge } from './components/ui/badge';
+import { ReportComposer } from './components/report/report-composer';
 import { MISSIONS_QUERY, type Mission, type MissionStatus } from './graphql/missions';
 
 const statusOptions: { value: 'ALL' | MissionStatus; label: string }[] = [
@@ -214,6 +215,9 @@ function App() {
           <div className="pt-4">
             <p className="text-xs uppercase tracking-wide text-slate-500">Upcoming deployments</p>
             <HighlightList cards={highlights} />
+          </div>
+          <div className="pt-6">
+            <ReportComposer missions={missions} />
           </div>
         </div>
       </Sidebar>
